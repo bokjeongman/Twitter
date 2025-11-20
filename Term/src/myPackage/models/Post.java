@@ -1,6 +1,7 @@
 package myPackage.models;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 
 public class Post {
     private String postId;
@@ -26,7 +27,6 @@ public class Post {
         this.originalContent = originalContent;
     }
 
-    // Getters
     public String getPostId() { return postId; }
     public String getWriterId() { return writerId; }
     public String getContent() { return content; }
@@ -36,29 +36,38 @@ public class Post {
     public String getOriginalWriterId() { return originalWriterId; }
     public String getOriginalContent() { return originalContent; }
 
-    // Format for ListView
     @Override
     public String toString() {
-        String postString = "Writer: " + writerId + " (Likes: " + likes + ")\n" +
-                            (content != null ? content : "") + "\n" + // Handle null content
-                            "(" + createdAt.toString() + ")";
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String dateStr = sdf.format(createdAt);
+
+        // 1. writer + num_of_likes + timeStamp
+        String header = "Writer: " + writerId + " (Likes: " + likes + ")  [" + dateStr + "]";
         
-        // If this is a Repost or Quote, show original post info
+        StringBuilder sb = new StringBuilder();
+        sb.append(header).append("\n");
+
+        // 2. content
         if (originalPostId != null) {
-            if (content == null || content.isEmpty()) { // Repost
-                postString = " [ " + writerId + " Reposted ]";
-            } else { // Quote
-                 postString = " [ " + writerId + " Quoted ]\n" +
-                             content + "\n" +
-                             "(" + createdAt.toString() + ")";
+            // repost or quote
+            if (content == null || content.isEmpty()) {
+                // repost
+                sb.append(" [ " + writerId + " Reposted ]");
+            } else {
+                // quote
+                sb.append(content);
             }
             
-            // Add original content
-            postString += "\n\n" +
-                          "    [Original Post by @" + originalWriterId + "]\n" +
-                          "    " + (originalContent != null ? originalContent : "(Content unavailable)");
+            // show original content
+            sb.append("\n\n")
+              .append("    --------------------------------\n")
+              .append("    | Original Post by @" + originalWriterId + " |\n")
+              .append("    | " + (originalContent != null ? originalContent : "(Content unavailable)") + " |\n")
+              .append("    --------------------------------");
+        } else {
+            sb.append(content != null ? content : "");
         }
         
-        return postString;
+        return sb.toString();
     }
 }
