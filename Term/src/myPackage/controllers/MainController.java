@@ -1,30 +1,24 @@
 package myPackage.controllers;
 
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.DialogPane;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.FlowPane; 
+import javafx.scene.layout.FlowPane;
+import javafx.stage.Stage;
 import myPackage.TwitApp;
 import myPackage.TwitService;
 import myPackage.models.Comment;
 import myPackage.models.Post;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
-
-
 
 public class MainController {
 
@@ -32,24 +26,23 @@ public class MainController {
     private TwitService twitService;
     private String currentUserId;
 
-    // --- [Common] ---
     @FXML private Label welcomeLabel;
     @FXML private Button logoutButton;
 
-    // --- [Tab 1: Home] ---
     @FXML private TextArea postTextArea;
     @FXML private Button postButton;
     @FXML private Button refreshButton;
     @FXML private ListView<Post> timelineView;
     private ObservableList<Post> timelinePosts = FXCollections.observableArrayList();
 
-    // --- [Tab 2: Post Details] ---
     @FXML private Label selectedPostLabel;
     @FXML private HBox postActionsBox;
     @FXML private Button likeButton;
     @FXML private Button unlikeButton;
     @FXML private Button repostButton;
     @FXML private Button quoteButton;
+    @FXML private Button deletePostButton; 
+
     @FXML private TextArea commentTextArea;
     @FXML private Button commentButton;
     @FXML private ListView<Comment> commentListView;
@@ -58,18 +51,17 @@ public class MainController {
     @FXML private Button likeCommentButton;
     @FXML private Button unlikeCommentButton;
     @FXML private Button replyButton;
+    @FXML private Button deleteCommentButton; 
     
     private Post selectedPost; 
     private Comment selectedComment; 
 
-    // --- [Tab 3: Explore] ---
     @FXML private TextField searchField;
     @FXML private Button searchTagButton;
     @FXML private Button searchUserButton;
     @FXML private ListView<Post> searchResultView;
     private ObservableList<Post> searchResultPosts = FXCollections.observableArrayList();
 
-    // --- [Tab 4: Social] ---
     @FXML private Button myFollowingButton;
     @FXML private Button myFollowerButton;
     @FXML private ListView<String> socialListView;
@@ -77,22 +69,16 @@ public class MainController {
     @FXML private Label otherUserLabel;
     @FXML private TextField socialSearchField;
     @FXML private Button socialSearchButton;
-    
     @FXML private FlowPane socialActionsBox; 
-    
     @FXML private Button viewFollowingButton;
     @FXML private Button viewFollowerButton;
     @FXML private Button followButton;
     @FXML private Button unfollowButton;
     private String searchedUserId; 
 
-    // --- [Tab 5: Account] ---
     @FXML private PasswordField newPasswordField;
     @FXML private Button changePasswordButton;
     @FXML private Label passwordStatusLabel;
-
-    
-    // --- [Methods] ---
 
     public void setApp(TwitApp twitApp, TwitService twitService, String currentUserId) {
         this.twitApp = twitApp;
@@ -119,7 +105,6 @@ public class MainController {
         loadTimeline();
     }
 
-    // [Tab 1] Load Timeline
     private void loadTimeline() {
         try {
             List<Post> posts = twitService.getTimeline(currentUserId);
@@ -129,13 +114,8 @@ public class MainController {
         }
     }
 
-    // [Tab 1] Refresh
-    @FXML
-    protected void handleRefresh() {
-        loadTimeline();
-    }
+    @FXML protected void handleRefresh() { loadTimeline(); }
 
-    // [Tab 1] Write post
     @FXML
     protected void handlePost() {
         String content = postTextArea.getText();
@@ -156,28 +136,18 @@ public class MainController {
         }
     }
     
-    // [Common] Log out
-    @FXML
-    protected void handleLogout() {
-        twitApp.showLoginScreen();
-    }
+    @FXML protected void handleLogout() { twitApp.showLoginScreen(); }
 
-    // --- [Tab 2 logic: post] ---
-    
-    // click post
+    // --- [Tab 2: Post Details] ---
     private void showPostDetails(Post post) {
         if (post == null) {
             clearPostDetails();
             return;
         }
-
         selectedPost = post;
         selectedPostLabel.setText(post.toString());
+        postActionsBox.setDisable(false);
         
-        // activate HBox to like my post
-        postActionsBox.setDisable(false); 
-        
-        // change button text by like status
         try {
             boolean alreadyLiked = twitService.checkPostLikeStatus(currentUserId, post.getPostId());
             likeButton.setDisable(alreadyLiked);
@@ -186,23 +156,43 @@ public class MainController {
             e.printStackTrace();
         }
         
-        // not activate repost or quote button when my post
-        boolean isMyPost = post.getWriterId().equals(currentUserId);
-        repostButton.setDisable(isMyPost);
-        quoteButton.setDisable(isMyPost);
+        repostButton.setDisable(false);
+        quoteButton.setDisable(false);
         
-        // activate comment area
+        // delete button activate when my post only
+        boolean isMyPost = post.getWriterId().equals(currentUserId);
+        if (deletePostButton != null) {
+            deletePostButton.setVisible(isMyPost); 
+            deletePostButton.setManaged(isMyPost);
+        }
+
         commentTextArea.setDisable(false);
         commentButton.setDisable(false);
-        
         loadComments(post.getPostId());
         clearCommentDetails();
     }
+    
+    private void refreshPostDetails() {
+        if (selectedPost == null) return;
+        try {
+            List<Post> updatedPosts = twitService.getTimeline(currentUserId);
+            timelinePosts.setAll(updatedPosts); 
+            
+            Post updatedPost = findPostById(selectedPost.getPostId());
+            if (updatedPost != null) {
+                showPostDetails(updatedPost); 
+            } else {
+                clearPostDetails();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-    // not select post 
     private void clearPostDetails() {
         selectedPost = null;
-        postActionsBox.setDisable(true); // not activate again
+        postActionsBox.setDisable(true);
+        if (deletePostButton != null) deletePostButton.setVisible(false); 
         commentTextArea.setDisable(true);
         commentButton.setDisable(true);
         selectedPostLabel.setText("Select a post from the Home or Explore tab.");
@@ -210,7 +200,6 @@ public class MainController {
         clearCommentDetails();
     }
 
-    // load comment
     private void loadComments(String postId) {
         try {
             List<Comment> comments = twitService.getComments(postId);
@@ -220,84 +209,84 @@ public class MainController {
         }
     }
     
-    // like post
-    @FXML
-    protected void handleLikePost() {
+    @FXML protected void handleLikePost() {
         if (selectedPost == null) return;
         try {
             twitService.likePost(currentUserId, selectedPost.getPostId());
-            loadTimeline();
-            // reload detail info 
-            Post updatedPost = findPostById(selectedPost.getPostId()); // find and update post in list
-            showPostDetails(updatedPost != null ? updatedPost : selectedPost); 
+            refreshPostDetails();
         } catch (SQLException e) {
              showAlert("DB Error", "Error liking post: " + e.getMessage());
         }
     }
     
-    // unlike post
-    @FXML
-    protected void handleUnlikePost() {
+    @FXML protected void handleUnlikePost() {
         if (selectedPost == null) return;
         try {
             twitService.unlikePost(currentUserId, selectedPost.getPostId());
-            loadTimeline();
-            Post updatedPost = findPostById(selectedPost.getPostId());
-            showPostDetails(updatedPost != null ? updatedPost : selectedPost);
+            refreshPostDetails();
         } catch (SQLException e) {
              showAlert("DB Error", "Error unliking post: " + e.getMessage());
         }
     }
+
     
-    // find specific post in timeline list to update num_of_likes
+    @FXML
+    protected void handleDeletePost() {
+        if (selectedPost == null) return;
+        
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Post");
+        alert.setHeaderText("Are you sure you want to delete this post?");
+        Optional<ButtonType> result = alert.showAndWait();
+        
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                boolean success = twitService.deletePost(selectedPost.getPostId(), currentUserId);
+                if (success) {
+                    showAlert("Success", "Post deleted.");
+                    loadTimeline();
+                    clearPostDetails();
+                } else {
+                    showAlert("Error", "Failed to delete post.");
+                }
+            } catch (SQLException e) {
+                showAlert("DB Error", "Error deleting post: " + e.getMessage());
+            }
+        }
+    }
+    
     private Post findPostById(String postId) {
-        for (Post post : timelinePosts) {
-            if (post.getPostId().equals(postId)) {
-                return post;
-            }
-        }
-        for (Post post : searchResultPosts) {
-             if (post.getPostId().equals(postId)) {
-                return post;
-            }
-        }
+        for (Post post : timelinePosts) if (post.getPostId().equals(postId)) return post;
+        for (Post post : searchResultPosts) if (post.getPostId().equals(postId)) return post;
         return null;
     }
     
-    // repost
-    @FXML
-    protected void handleRepost() {
+    @FXML protected void handleRepost() {
         if (selectedPost == null) return;
         try {
             boolean success = twitService.writeRepost(currentUserId, selectedPost.getPostId(), null);
             if (success) {
                 showAlert("Success", "Post reposted.");
-                loadTimeline();
-                clearPostDetails();
+                refreshPostDetails();
             } else {
-                 showAlert("Failed", "Could not repost. (Cannot repost own post or post not found)");
+                 showAlert("Failed", "Could not repost. (Cannot repost own post)");
             }
         } catch (SQLException e) {
             showAlert("DB Error", "Error during repost: " + e.getMessage());
         }
     }
     
-    // quote
-    @FXML
-    protected void handleQuote() {
+    @FXML protected void handleQuote() {
         if (selectedPost == null) return;
-        String quoteContent = showTextInputDialog("Quote Post",
-            "Quoting post from @" + selectedPost.getWriterId(), "Enter your quote content:");
-        
+        String quoteContent = showTextInputDialog("Quote Post", "Quoting post from @" + selectedPost.getWriterId(), "Enter your quote content:");
         if (quoteContent != null && !quoteContent.isEmpty()) {
              try {
                 boolean success = twitService.writeRepost(currentUserId, selectedPost.getPostId(), quoteContent);
                 if (success) {
                     showAlert("Success", "Quote post created.");
-                    loadTimeline();
-                    clearPostDetails();
+                    refreshPostDetails();
                 } else {
-                    showAlert("Failed", "Could not quote. (Cannot quote own post or post not found)");
+                    showAlert("Failed", "Could not quote. (Cannot quote own post)");
                 }
             } catch (SQLException e) {
                 showAlert("DB Error", "Error during quote: " + e.getMessage());
@@ -305,16 +294,13 @@ public class MainController {
         }
     }
 
-    // write comment
-    @FXML
-    protected void handleWriteComment() {
+    @FXML protected void handleWriteComment() {
         if (selectedPost == null) return;
         String content = commentTextArea.getText();
         if (content.isEmpty()) {
             showAlert("Input Error", "Comment content cannot be empty.");
             return;
         }
-        
         try {
             twitService.writeComment(currentUserId, selectedPost.getPostId(), content);
             commentTextArea.clear();
@@ -324,9 +310,6 @@ public class MainController {
         }
     }
 
-    // --- [Tab 2 logic: Comment] ---
-    
-    // click comment
     private void showCommentDetails(Comment comment) {
         if (comment == null) {
             clearCommentDetails();
@@ -342,17 +325,22 @@ public class MainController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // activate delete button when my comment only
+        boolean isMyComment = comment.getWriterId().equals(currentUserId);
+        if (deleteCommentButton != null) {
+            deleteCommentButton.setVisible(isMyComment);
+            deleteCommentButton.setManaged(isMyComment);
+        }
     }
 
-    // not select comment
     private void clearCommentDetails() {
         selectedComment = null;
         commentActionsBox.setDisable(true);
+        if (deleteCommentButton != null) deleteCommentButton.setVisible(false); 
     }
     
-    // like comment
-    @FXML
-    protected void handleLikeComment() {
+    @FXML protected void handleLikeComment() {
         if (selectedComment == null) return;
         try {
             twitService.likeComment(currentUserId, selectedComment.getCommentId());
@@ -363,9 +351,7 @@ public class MainController {
         }
     }
     
-    // unlike comment
-    @FXML
-    protected void handleUnlikeComment() {
+    @FXML protected void handleUnlikeComment() {
         if (selectedComment == null) return;
         try {
             twitService.unlikeComment(currentUserId, selectedComment.getCommentId());
@@ -376,19 +362,13 @@ public class MainController {
         }
     }
 
-    // reply
-    @FXML
-    protected void handleReplyToComment() {
+    @FXML protected void handleReplyToComment() {
         if (selectedComment == null || selectedPost == null) return;
-        
         if (selectedComment.getParentCommentId() != null) {
             showAlert("Notice", "You cannot reply to a reply.");
             return;
         }
-        
-        String replyContent = showTextInputDialog("Reply to Comment",
-            "Replying to @" + selectedComment.getWriterId(), "Enter your reply:");
-        
+        String replyContent = showTextInputDialog("Reply to Comment", "Replying to @" + selectedComment.getWriterId(), "Enter your reply:");
         if (replyContent != null && !replyContent.isEmpty()) {
             try {
                 twitService.writeReply(currentUserId, selectedPost.getPostId(), selectedComment.getCommentId(), replyContent);
@@ -399,30 +379,48 @@ public class MainController {
             }
         }
     }
-    
-    // --- [Tab 3 logic: Explore] ---
-    
+
     @FXML
-    protected void handleSearchTag() {
+    protected void handleDeleteComment() {
+        if (selectedComment == null) return;
+        
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Comment");
+        alert.setHeaderText("Delete this comment?");
+        Optional<ButtonType> result = alert.showAndWait();
+        
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            try {
+                boolean success = twitService.deleteComment(selectedComment.getCommentId(), currentUserId);
+                if (success) {
+                    showAlert("Success", "Comment deleted.");
+                    loadComments(selectedPost.getPostId());
+                    clearCommentDetails();
+                } else {
+                    showAlert("Error", "Failed to delete comment.");
+                }
+            } catch (SQLException e) {
+                showAlert("DB Error", "Error deleting comment: " + e.getMessage());
+            }
+        }
+    }
+
+    // --- [Explore] ---
+    @FXML protected void handleSearchTag() {
         String tag = searchField.getText();
         if (tag.isEmpty()) return;
-        
         try {
             List<Post> posts = twitService.searchByHashtag(tag);
             searchResultPosts.setAll(posts);
-            if (posts.isEmpty()) {
-                showAlert("Search Result", "No posts found with #" + tag);
-            }
+            if (posts.isEmpty()) showAlert("Search Result", "No posts found with #" + tag);
         } catch (SQLException e) {
             showAlert("DB Error", "Error searching hashtag: " + e.getMessage());
         }
     }
     
-    @FXML
-    protected void handleSearchUser() {
+    @FXML protected void handleSearchUser() {
         String userId = searchField.getText();
         if (userId.isEmpty()) return;
-        
         try {
             if (!twitService.checkUserExists(userId)) {
                  showAlert("Search Result", "User '" + userId + "' not found.");
@@ -436,168 +434,136 @@ public class MainController {
         }
     }
 
-    // --- [Tab 4 logic: Social] ---
-    
-    @FXML
-    protected void handleShowMyFollowing() {
-        socialList.clear();
-        socialList.add("--- [Users I Follow] ---");
+    // --- [Social] ---
+    @FXML protected void handleShowMyFollowing() {
+        socialList.clear(); socialList.add("--- [Users I Follow] ---");
         try {
             List<String> list = twitService.getFollowingList(currentUserId);
-            if (list.isEmpty()) socialList.add("None");
-            else socialList.addAll(list);
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error loading following list: " + e.getMessage());
-        }
+            if (list.isEmpty()) socialList.add("None"); else socialList.addAll(list);
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
 
-    @FXML
-    protected void handleShowMyFollowers() {
-        socialList.clear();
-        socialList.add("--- [Users Who Follow Me] ---");
+    @FXML protected void handleShowMyFollowers() {
+        socialList.clear(); socialList.add("--- [Users Who Follow Me] ---");
          try {
             List<String> list = twitService.getFollowerList(currentUserId);
-            if (list.isEmpty()) socialList.add("None");
-            else socialList.addAll(list);
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error loading follower list: " + e.getMessage());
-        }
+            if (list.isEmpty()) socialList.add("None"); else socialList.addAll(list);
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    @FXML
-    protected void handleSocialSearchUser() {
+    @FXML protected void handleSocialSearchUser() {
         searchedUserId = socialSearchField.getText();
-        if (searchedUserId.isEmpty()) {
-            socialActionsBox.setDisable(true);
-            return;
+        if (searchedUserId.isEmpty() || searchedUserId.equals(currentUserId)) {
+            socialActionsBox.setDisable(true); return;
         }
-        if (searchedUserId.equals(currentUserId)) {
-            showAlert("Notice", "You cannot search for yourself here.");
-            socialActionsBox.setDisable(true);
-            return;
-        }
-        
         try {
             if (!twitService.checkUserExists(searchedUserId)) {
-                showAlert("Search Failed", "User '" + searchedUserId + "' not found.");
-                socialActionsBox.setDisable(true);
-                return;
+                showAlert("Failed", "User not found.");
+                socialActionsBox.setDisable(true); return;
             }
-            
             otherUserLabel.setText("Actions for [" + searchedUserId + "]:");
             socialActionsBox.setDisable(false);
-            
-            boolean alreadyFollowing = twitService.checkFollowStatus(currentUserId, searchedUserId);
-            followButton.setDisable(alreadyFollowing);
-            unfollowButton.setDisable(!alreadyFollowing);
-            
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error searching user: " + e.getMessage());
-        }
+            boolean following = twitService.checkFollowStatus(currentUserId, searchedUserId);
+            followButton.setDisable(following);
+            unfollowButton.setDisable(!following);
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    @FXML
-    protected void handleShowOtherFollowing() {
+    @FXML protected void handleShowOtherFollowing() {
         if (searchedUserId == null) return;
-        socialList.clear();
-        socialList.add("--- [Users @" + searchedUserId + " Follows] ---");
+        socialList.clear(); socialList.add("--- [Users @" + searchedUserId + " Follows] ---");
         try {
             List<String> list = twitService.getFollowingList(searchedUserId);
-            if (list.isEmpty()) socialList.add("None");
-            else socialList.addAll(list);
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error loading following list: " + e.getMessage());
-        }
+            if (list.isEmpty()) socialList.add("None"); else socialList.addAll(list);
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    @FXML
-    protected void handleShowOtherFollower() {
+    @FXML protected void handleShowOtherFollower() {
         if (searchedUserId == null) return;
-        socialList.clear();
-        socialList.add("--- [Followers of @" + searchedUserId + "] ---");
+        socialList.clear(); socialList.add("--- [Followers of @" + searchedUserId + "] ---");
         try {
             List<String> list = twitService.getFollowerList(searchedUserId);
-            if (list.isEmpty()) socialList.add("None");
-            else socialList.addAll(list);
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error loading follower list: " + e.getMessage());
-        }
+            if (list.isEmpty()) socialList.add("None"); else socialList.addAll(list);
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    @FXML
-    protected void handleFollow() {
+    @FXML protected void handleFollow() {
         if (searchedUserId == null) return;
         try {
             twitService.followUser(currentUserId, searchedUserId);
             handleSocialSearchUser();
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error during follow: " + e.getMessage());
-        }
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    @FXML
-    protected void handleUnfollow() {
+    @FXML protected void handleUnfollow() {
         if (searchedUserId == null) return;
         try {
             twitService.unfollowUser(currentUserId, searchedUserId);
             handleSocialSearchUser();
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error during unfollow: " + e.getMessage());
-        }
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
     }
     
-    // --- [Tab 5 logic: Account] ---
-    
-    @FXML
-    protected void handleChangePassword() {
+    // --- [Account] ---
+    @FXML protected void handleChangePassword() {
         String newPwd = newPasswordField.getText();
-        if (newPwd.isEmpty()) {
-            passwordStatusLabel.setText("New password cannot be empty.");
-            return;
-        }
-        
+        if (newPwd.isEmpty()) return;
         try {
-            boolean success = twitService.changePassword(currentUserId, newPwd);
-            if (success) {
+            if (twitService.changePassword(currentUserId, newPwd)) {
                 newPasswordField.clear();
                 passwordStatusLabel.setText("Password changed successfully.");
             } else {
                  passwordStatusLabel.setText("Password change failed.");
             }
-        } catch (SQLException e) {
-             showAlert("DB Error", "Error changing password: " + e.getMessage());
+        } catch (SQLException e) { showAlert("DB Error", "Error: " + e.getMessage()); }
+    }
+
+    @FXML
+    protected void handleDeleteAccount() {
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmAlert.setTitle("Delete Account");
+        confirmAlert.setHeaderText("Warning!");
+        confirmAlert.setContentText("Do you really want to delete account? This cannot be undone.");
+
+        Optional<ButtonType> result = confirmAlert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            TextInputDialog pwdDialog = new TextInputDialog();
+            pwdDialog.setTitle("Authentication");
+            pwdDialog.setHeaderText("Enter your password to confirm deletion:");
+            pwdDialog.setContentText("Password:");
+
+            Optional<String> pwdResult = pwdDialog.showAndWait();
+            pwdResult.ifPresent(password -> {
+                try {
+                    boolean success = twitService.deleteAccount(currentUserId, password);
+                    if (success) {
+                        showAlert("Goodbye", "Account deleted successfully.");
+                        twitApp.showLoginScreen(); // 로그아웃
+                    } else {
+                        showAlert("Error", "Wrong password or deletion failed.");
+                    }
+                } catch (SQLException e) {
+                    showAlert("DB Error", "Error deleting account: " + e.getMessage());
+                }
+            });
         }
     }
 
-    // --- [Util: alert and input] ---
-    
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        
+        alert.setTitle(title); alert.setHeaderText(null); alert.setContentText(message);
         DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(
-           getClass().getResource("/resources/styles.css").toExternalForm());
+        dialogPane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
         dialogPane.getStyleClass().add("root");
-        
         alert.showAndWait();
     }
     
     private String showTextInputDialog(String title, String header, String content) {
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle(title);
-        dialog.setHeaderText(header);
-        dialog.setContentText(content);
-        
+        dialog.setTitle(title); dialog.setHeaderText(header); dialog.setContentText(content);
         DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStylesheets().add(
-           getClass().getResource("/resources/styles.css").toExternalForm());
+        dialogPane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
         dialogPane.getStyleClass().add("root");
-        
         Optional<String> result = dialog.showAndWait();
         return result.orElse(null);
     }
-
-} 
+}
