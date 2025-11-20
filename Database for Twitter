@@ -1,0 +1,133 @@
+show databases;
+drop database if exists twitter;
+create database twitter;
+use twitter;
+
+create table `user` (
+	`user_id` varchar(15) not null PRIMARY KEY,
+    `pwd` varchar(15) not null
+    /*`e_mail` varchar(30),
+    `phone_number` varchar(15),
+    `birth` varchar(10)*/
+);
+
+insert into user values('kim', 'iamkim');
+insert into user values('song', 'iamsong');
+insert into user values('x.o.r.b', 'xorb');
+insert into user values('choi', 'iamchoi');
+insert into user values('han', 'iamhan');
+insert into user values('jeon', 'iamjeon');
+
+create table `posts` (
+	`post_id` varchar(15) not null PRIMARY KEY,
+    `content` text,
+    `num_of_likes` int default 0,
+	`writer_id` varchar(15) not null,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `original_post_id` varchar(15),
+    FOREIGN KEY (original_post_id) REFERENCES posts(post_id) ON DELETE SET NULL,
+    FOREIGN KEY (writer_id) REFERENCES user(user_id) ON DELETE CASCADE
+);
+
+insert into posts (post_id, content, writer_id) values ('p1', 'First post was written by x.o.r.b!!', 'x.o.r.b');
+insert into posts (post_id, content, writer_id) values ('p2', 'Second post was written by jeon!!', 'jeon');
+insert into posts (post_id, content, writer_id) values ('p3', 'Third post was written by han!!', 'han');
+insert into posts (post_id, content, writer_id) values ('p4', 'Fourth post was written by kim!!', 'kim');
+insert into posts (post_id, content, writer_id) values ('p5', 'Fiveth post was written by choi!!', 'choi');
+
+
+create table `comment` ( /* 일반 댓글: post_id는 원본글 ID, parent_comment_id 는 null / 대댓글: post_id는 원본글 ID, parent_comment_id는 대댓글의 부모댓글의 comment_id*/
+	`comment_id` varchar(15) not null PRIMARY KEY,
+    `parent_comment_id` varchar(15),
+    `content` text,
+    `num_of_likes` int default 0,
+    `writer_id` varchar(15) not null,
+    `post_id` varchar(15) not null,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
+    FOREIGN KEY (writer_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+);
+
+insert into comment (comment_id, content, writer_id, post_id) values('c1', 'Congratulations!!', 'choi', 'p1');
+insert into comment (comment_id, content, writer_id, post_id) values('c2', 'Hello', 'jeon', 'p2');
+insert into comment (comment_id, content, writer_id, post_id) values('c3', 'Hello World', 'han', 'p1');
+insert into comment (comment_id, content, writer_id, post_id) values('c4', '2025', 'kim', 'p3');
+insert into comment (comment_id, content, writer_id, post_id) values('c5', 'November', 'song', 'p1');
+
+
+create table `follow_relationship` ( /* 관리 쉽고 데이터 일관성 보장, 두개의 테이블은 데이터가 중복 저장되는 비효율적인 방식 */
+    `user_id` varchar(15) not null, /* user_id가 following_id follow */
+    `following_id` varchar(15) not null,
+    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, following_id) 
+); 
+/* select following_id from follow_relationship where user_id = 'my_id'; 내가 팔로우 하는 아이디 목록 */ 
+/* select user_id from follow_relationship where following_id = 'my_id'; 나를 팔로우 하는 아이디 목록 */
+
+insert into follow_relationship values('kim', 'x.o.r.b');
+insert into follow_relationship values('jeon', 'x.o.r.b');
+insert into follow_relationship values('han', 'x.o.r.b');
+insert into follow_relationship values('song', 'x.o.r.b');
+insert into follow_relationship values('choi', 'x.o.r.b');
+insert into follow_relationship values('x.o.r.b', 'song');
+insert into follow_relationship values('x.o.r.b', 'jeon');
+
+
+
+create table `post_like` ( /* 누가 좋아요를 눌렀는지 그리고 좋아요 중복 방지를 위해 필요함, 이 글을 n명이 좋아합니다 를 눌렀을때, 좋아요 누른 사람의 목록을 볼 수 있음 */
+    `post_id` varchar(15) not null,
+    `liker_id` varchar(15) not null,
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+    FOREIGN KEY (liker_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, liker_id)
+);
+
+insert into post_like values ('p1', 'choi');
+insert into post_like values ('p3', 'jeon');
+insert into post_like values ('p5', 'x.o.r.b');
+insert into post_like values ('p2', 'han');
+insert into post_like values ('p4', 'kim');
+
+
+
+create table `comment_like` ( /* 누가 좋아요를 눌렀는지 그리고 좋아요 중복 방지를 위해 필요함, 이 글을 n명이 좋아합니다 를 눌렀을때, 좋아요 누른 사람의 목록을 볼 수 있음 */
+    `comment_id` varchar(15) not null,
+    `liker_id` varchar(15) not null,
+    FOREIGN KEY (comment_id) REFERENCES comment(comment_id) ON DELETE CASCADE,
+    FOREIGN KEY (liker_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    PRIMARY KEY (comment_id, liker_id)
+);
+
+create table `hashtag` (
+	`hashtag_id` int auto_increment PRIMARY KEY,
+    `tag_text` varchar(100) not null UNIQUE KEY
+);
+
+create table `post_hashtag` ( /* table connect posts and hashtag */
+	`post_id` varchar(15) not null,
+    `hashtag_id` int not null,
+    PRIMARY KEY (post_id, hashtag_id),
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+    FOREIGN KEY (hashtag_id) REFERENCES hashtag(hashtag_id) ON DELETE CASCADE
+);
+
+insert into comment_like values ('c1', 'x.o.r.b');
+insert into comment_like values ('c2', 'jeon');
+insert into comment_like values ('c1', 'kim');
+insert into comment_like values ('c4', 'han');
+insert into comment_like values ('c5', 'x.o.r.b');
+
+
+
+select following_id from follow_relationship where user_id = 'x.o.r.b';
+
+select * from posts;
+
+delete from posts where writer_id = 'x.o.r.b';
+delete from posts where writer_id = 'kim';
+select * from posts;
+
+update posts set content = 'This is updated content!!' where writer_id = 'Jeon';
+select * from posts;
