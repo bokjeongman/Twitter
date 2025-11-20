@@ -8,11 +8,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<!-- 
-  Link CSS file. 
-  '@styles.css' means "look in the same folder as this FXML file".
-  TwitApp.java will handle loading this, but FXML also needs it.
--->
 <VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="350.0" prefWidth="450.0" spacing="15.0" styleClass="root" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="myPackage.controllers.LoginController">
    <children>
       <Label styleClass="label-title" text="Log in to Twitter">
