@@ -4,7 +4,7 @@ import java.sql.Timestamp;
 
 public class Comment {
     private String commentId;
-    private String parentCommentId; // ID of the comment this is replying to
+    private String parentCommentId;
     private String writerId;
     private String content;
     private int likes;
@@ -19,12 +19,12 @@ public class Comment {
         this.createdAt = createdAt;
     }
 
-    // Getters
     public String getCommentId() { return commentId; }
     public String getParentCommentId() { return parentCommentId; }
     public String getWriterId() { return writerId; }
     public String getContent() { return content; }
     public int getLikes() { return likes; }
+    public Timestamp getCreatedAt() { return createdAt; }
 
     @Override
     public String toString() {
