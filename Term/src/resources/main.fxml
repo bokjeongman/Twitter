@@ -17,6 +17,7 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="root" stylesheets="@styles.css" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="myPackage.controllers.MainController">
@@ -29,10 +30,12 @@
               <children>
                 <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="15.0" style="-fx-border-color: #38444D; -fx-border-width: 0 0 1 0; -fx-padding: 0 0 10 0;">
                   <children>
-                    <Label fx:id="welcomeLabel" maxWidth="1.7976931348623157E308" styleClass="label-title" text="👋 Hello" HBox.hgrow="ALWAYS">
+      
+                    
+                    <Label fx:id="welcomeLabel" maxWidth="1.7976931348623157E308" styleClass="label-title" text="Home" HBox.hgrow="ALWAYS">
                        <font><Font size="22.0" /></font>
                     </Label>
-                    <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" style="-fx-background-color: transparent; -fx-text-fill: #1DA1F2; -fx-font-weight: bold; -fx-cursor: hand;" text="🔄 Refresh" />
+                    
                     <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" styleClass="button-danger" text="🚪 Log Out" />
                   </children>
                   <padding><Insets left="20.0" right="20.0" top="15.0" /></padding>
@@ -76,11 +79,11 @@
                  <HBox fx:id="postActionsBox" alignment="CENTER_LEFT" disable="true" spacing="20.0" style="-fx-background-color: #15202B; -fx-border-color: #38444D; -fx-border-width: 1 0 0 0;">
                       <padding><Insets top="15" bottom="15" left="25" right="25"/></padding>
                       <children>
-                        <Button fx:id="likeButton" mnemonicParsing="false" onAction="#handleLikePost" style="-fx-background-color: transparent; -fx-text-fill: #E0245E; -fx-font-size: 24px;" text="❤️"><tooltip><Tooltip text="Like" /></tooltip></Button>
-                        <Button fx:id="unlikeButton" mnemonicParsing="false" onAction="#handleUnlikePost" style="-fx-background-color: transparent; -fx-text-fill: #8899A6; -fx-font-size: 24px;" text="💔"><tooltip><Tooltip text="Unlike" /></tooltip></Button>
-                        <Button fx:id="repostButton" mnemonicParsing="false" onAction="#handleRepost" style="-fx-background-color: transparent; -fx-text-fill: #17BF63; -fx-font-size: 24px;" text="🔁"><tooltip><Tooltip text="Repost" /></tooltip></Button>
-                        <Button fx:id="quoteButton" mnemonicParsing="false" onAction="#handleQuote" style="-fx-background-color: transparent; -fx-text-fill: #1DA1F2; -fx-font-size: 24px;" text="💬"><tooltip><Tooltip text="Quote Tweet" /></tooltip></Button>
-                        <Button fx:id="deletePostButton" mnemonicParsing="false" onAction="#handleDeletePost" style="-fx-background-color: transparent; -fx-text-fill: #E0245E; -fx-font-size: 24px;" text="🗑️" visible="false"><tooltip><Tooltip text="Delete Post" /></tooltip></Button>
+                        <Button fx:id="likeButton" mnemonicParsing="false" onAction="#handleLikePost" styleClass="icon-button" text="❤"><tooltip><Tooltip text="Like" /></tooltip></Button>
+                        <Button fx:id="unlikeButton" mnemonicParsing="false" onAction="#handleUnlikePost" styleClass="icon-button" text="💔"><tooltip><Tooltip text="Unlike" /></tooltip></Button>
+                        <Button fx:id="repostButton" mnemonicParsing="false" onAction="#handleRepost" styleClass="icon-button" text="🔁"><tooltip><Tooltip text="Repost" /></tooltip></Button>
+                        <Button fx:id="quoteButton" mnemonicParsing="false" onAction="#handleQuote" styleClass="icon-button" text="💬"><tooltip><Tooltip text="Quote Tweet" /></tooltip></Button>
+                        <Button fx:id="deletePostButton" mnemonicParsing="false" onAction="#handleDeletePost" styleClass="icon-button-danger" text="🗑" visible="false"><tooltip><Tooltip text="Delete Post" /></tooltip></Button>
                       </children>
                  </HBox>
               </VBox>
@@ -95,10 +98,11 @@
                     <Separator opacity="0.1"/>
                     <Label text="Comments" style="-fx-font-weight: bold; -fx-text-fill: #8899A6;" />
                     <ListView fx:id="commentListView" VBox.vgrow="ALWAYS" styleClass="list-view" />
+                    
                     <HBox fx:id="commentActionsBox" alignment="CENTER_RIGHT" disable="true" spacing="15.0">
                       <children>
-                        <Button fx:id="likeCommentButton" mnemonicParsing="false" onAction="#handleLikeComment" style="-fx-background-color: transparent; -fx-text-fill: #E0245E;" text="❤️" />
-                        <Button fx:id="unlikeCommentButton" mnemonicParsing="false" onAction="#handleUnlikeComment" style="-fx-background-color: transparent; -fx-text-fill: #8899A6;" text="💔" />
+                        <Button fx:id="likeCommentButton" mnemonicParsing="false" onAction="#handleLikeComment" styleClass="icon-button-small" text="❤" />
+                        <Button fx:id="unlikeCommentButton" mnemonicParsing="false" onAction="#handleUnlikeComment" styleClass="icon-button-small" text="💔" />
                         <Button fx:id="replyButton" mnemonicParsing="false" onAction="#handleReplyToComment" text="Reply" />
                         <Button fx:id="deleteCommentButton" mnemonicParsing="false" onAction="#handleDeleteComment" styleClass="button-danger" text="Delete" visible="false" />
                       </children>
