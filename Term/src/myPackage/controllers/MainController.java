@@ -3,6 +3,7 @@ package myPackage.controllers;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -334,13 +335,46 @@ public class MainController {
     }
 
     private void loadTimeline() {
-        try {
-            List<Post> posts = twitService.getTimeline(currentUserId);
-            timelinePosts.setAll(posts);
-        } catch (SQLException e) {
-            showAlert("DB Error", "Error loading timeline: " + e.getMessage());
+
+        // 새로고침 버튼 잠깐 비활성화 (버튼이 있으면)
+        if (refreshButton != null) {
+            refreshButton.setDisable(true);
         }
+
+        // DB에서 타임라인을 읽어오는 작업을 백그라운드 스레드에서 실행
+        Task<List<Post>> task = new Task<List<Post>>() {
+            @Override
+            protected List<Post> call() throws Exception {
+                return twitService.getTimeline(currentUserId);
+            }
+        };
+
+        // 성공적으로 로딩이 끝났을 때 UI 업데이트
+        task.setOnSucceeded(e -> {
+            List<Post> posts = task.getValue();
+            timelinePosts.setAll(posts);
+
+            if (refreshButton != null) {
+                refreshButton.setDisable(false);
+            }
+        });
+
+        // 에러 났을 때 처리
+        task.setOnFailed(e -> {
+            Throwable ex = task.getException();
+            showAlert("DB Error", "Error loading timeline: " + ex.getMessage());
+
+            if (refreshButton != null) {
+                refreshButton.setDisable(false);
+            }
+        });
+
+        // 실제로 백그라운드에서 Task 실행
+        Thread t = new Thread(task);
+        t.setDaemon(true);
+        t.start();
     }
+
 
     @FXML protected void handleRefresh() { loadTimeline(); }
 
