@@ -95,10 +95,11 @@ public class MainController {
         socialListView.setCellFactory(createUserCellFactory());
 
         commentListView.setCellFactory(param -> new ListCell<Comment>() {
-            private final VBox rootBox = new VBox(3);
+            private final VBox rootBox = new VBox(4); 
             private final Label infoLabel = new Label();
             private final Label contentLabel = new Label();
-            
+            private final Label likeLabel = new Label();
+
             {
                 rootBox.setMaxWidth(Double.MAX_VALUE);
                 rootBox.setAlignment(Pos.CENTER_LEFT);
@@ -107,7 +108,9 @@ public class MainController {
                 contentLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
                 contentLabel.setWrapText(true);
                 
-                rootBox.getChildren().addAll(infoLabel, contentLabel);
+                likeLabel.setStyle("-fx-text-fill: #E0245E; -fx-font-size: 12px; -fx-padding: 2 0 0 0;");
+                
+                rootBox.getChildren().addAll(infoLabel, contentLabel, likeLabel);
             }
             
             @Override
@@ -122,7 +125,6 @@ public class MainController {
                     String timeStr = getRelativeTime(item.getCreatedAt());
                     
                     double leftPadding = 10; 
-                    
                     if (item.getParentCommentId() != null) {
                         leftPadding = 50; 
                         infoLabel.setText("↪ " + item.getWriterId() + "  •  " + timeStr);
@@ -132,15 +134,15 @@ public class MainController {
                     }
                     
                     rootBox.setPadding(new Insets(10, 10, 10, leftPadding));
-                    
                     contentLabel.setText(item.getContent());
+                    
+                    likeLabel.setText("❤️ " + item.getLikes());
 
                     if (isSelected()) {
                         rootBox.setStyle("-fx-background-color: #1C2732; -fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 4;");
                     } else {
                         rootBox.setStyle("-fx-background-color: transparent; -fx-border-color: #38444D; -fx-border-width: 0 0 1 0;");
                     }
-
                     setGraphic(rootBox);
                     setText(null);
                 }
