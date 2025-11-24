@@ -92,24 +92,43 @@ public class MainController {
         timelineView.setCellFactory(createPostCellFactory());
         searchResultView.setCellFactory(createPostCellFactory());
         socialListView.setCellFactory(createUserCellFactory());
-
         commentListView.setCellFactory(param -> new ListCell<Comment>() {
-            private final VBox rootBox = new VBox(4); 
-            private final Label infoLabel = new Label();
-            private final Label contentLabel = new Label();
-            private final Label likeLabel = new Label();
+
+            private final HBox rootBox = new HBox(10);
+            
+            private final StackPane profilePane = new StackPane();
+            private final Circle profileCircle = new Circle(15); 
+            private final Label profileInitial = new Label();
+
+            private final VBox contentBox = new VBox(3);
+            private final HBox headerBox = new HBox(5);
+            private final Label nameLabel = new Label(); 
+            private final Label timeLabel = new Label(); 
+            private final Label contentLabel = new Label(); 
+            private final Label likeLabel = new Label(); 
 
             {
                 rootBox.setMaxWidth(Double.MAX_VALUE);
-                rootBox.setAlignment(Pos.CENTER_LEFT);
-                
-                infoLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #8899A6; -fx-font-size: 12px;");
-                contentLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+                rootBox.setAlignment(Pos.TOP_LEFT);
+                rootBox.setPadding(new Insets(8));
+
+                profileInitial.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
+                profilePane.getChildren().addAll(profileCircle, profileInitial);
+                profilePane.setMinWidth(30); profilePane.setMinHeight(30);
+
+                nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
+                timeLabel.setStyle("-fx-text-fill: #71767B; -fx-font-size: 12px;");
+                headerBox.getChildren().addAll(nameLabel, timeLabel);
+                headerBox.setAlignment(Pos.CENTER_LEFT);
+
+                contentLabel.setStyle("-fx-text-fill: #E7E9EA; -fx-font-size: 14px;");
                 contentLabel.setWrapText(true);
+                likeLabel.setStyle("-fx-text-fill: #E0245E; -fx-font-size: 11px; -fx-padding: 2 0 0 0;");
+
+                contentBox.getChildren().addAll(headerBox, contentLabel, likeLabel);
                 
-                likeLabel.setStyle("-fx-text-fill: #E0245E; -fx-font-size: 12px; -fx-padding: 2 0 0 0;");
-                
-                rootBox.getChildren().addAll(infoLabel, contentLabel, likeLabel);
+                rootBox.getChildren().addAll(profilePane, contentBox);
+                HBox.setHgrow(contentBox, Priority.ALWAYS);
             }
             
             @Override
@@ -121,27 +140,28 @@ public class MainController {
                     setText(null);
                     setStyle("-fx-background-color: transparent;"); 
                 } else {
-                    String timeStr = getRelativeTime(item.getCreatedAt());
+                    String writer = item.getWriterId();
                     
-                    double leftPadding = 10; 
-                    if (item.getParentCommentId() != null) {
-                        leftPadding = 50; 
-                        infoLabel.setText("↪ " + item.getWriterId() + "  •  " + timeStr);
-                    } else {
-                        leftPadding = 10;
-                        infoLabel.setText("💬 " + item.getWriterId() + "  •  " + timeStr);
-                    }
-                    
-                    rootBox.setPadding(new Insets(10, 10, 10, leftPadding));
+                    profileCircle.setFill(Color.web(getColorForUser(writer)));
+                    if (writer.length() > 0) profileInitial.setText(writer.substring(0, 1).toUpperCase());
+
+                    nameLabel.setText(writer);
+                    timeLabel.setText("• " + getRelativeTime(item.getCreatedAt()));
                     contentLabel.setText(item.getContent());
-                    
                     likeLabel.setText("❤️ " + item.getLikes());
 
-                    if (isSelected()) {
-                        rootBox.setStyle("-fx-background-color: #1C2732; -fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 4;");
+                    if (item.getParentCommentId() != null) {
+                        rootBox.setPadding(new Insets(8, 8, 8, 50));
+                        rootBox.setStyle("-fx-border-color: #38444D; -fx-border-width: 0 0 0 3; -fx-border-insets: 0 0 0 35;");
                     } else {
-                        rootBox.setStyle("-fx-background-color: transparent; -fx-border-color: #38444D; -fx-border-width: 0 0 1 0;");
+                        rootBox.setPadding(new Insets(8));
+                        rootBox.setStyle("-fx-background-color: transparent;");
                     }
+
+                    if (isSelected()) {
+                        rootBox.setStyle("-fx-background-color: #1C2732; -fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 0;");
+                    }
+
                     setGraphic(rootBox);
                     setText(null);
                 }
@@ -535,10 +555,14 @@ public class MainController {
         ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "", btnOk, btnCancel);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to delete this post?", btnOk, btnCancel);
         alert.setTitle("Delete Post");
-        alert.setHeaderText("Are you sure you want to delete this post?");
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        alert.setHeaderText("Delete Confirmation");
+        
+        DialogPane pane = alert.getDialogPane();
+        pane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        pane.getStyleClass().add("root");
+
         Optional<ButtonType> result = alert.showAndWait();
         
         if (result.isPresent() && result.get() == btnOk) {
@@ -679,13 +703,16 @@ public class MainController {
     protected void handleDeleteComment() {
         ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "", btnOk, btnCancel);
-        alert.setTitle("Delete Comment");
-        alert.setHeaderText("Delete this comment?");
-        alert.getDialogPane().getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
-        Optional<ButtonType> result = alert.showAndWait();
         
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete this comment?", btnOk, btnCancel);
+        alert.setTitle("Delete Comment");
+        alert.setHeaderText("Delete Confirmation");
+        
+        DialogPane pane = alert.getDialogPane();
+        pane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        pane.getStyleClass().add("root");
+
+        Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == btnOk) {
             try {
                 boolean success = twitService.deleteComment(selectedComment.getCommentId(), currentUserId);
@@ -816,22 +843,25 @@ public class MainController {
         ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
 
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION, "", btnOk, btnCancel);
+        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION, "Do you really want to delete account? This cannot be undone.", btnOk, btnCancel);
         confirmAlert.setTitle("Delete Account");
         confirmAlert.setHeaderText("Warning!");
-        confirmAlert.setContentText("Do you really want to delete account? This cannot be undone.");
         
-        confirmAlert.getDialogPane().getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
-        confirmAlert.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
-        confirmAlert.getDialogPane().setMinWidth(400);
+        DialogPane pane = confirmAlert.getDialogPane();
+        pane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        pane.getStyleClass().add("danger-alert");
 
         Optional<ButtonType> result = confirmAlert.showAndWait();
         if (result.isPresent() && result.get() == btnOk) {
             TextInputDialog pwdDialog = new TextInputDialog();
             pwdDialog.setTitle("Authentication");
-            pwdDialog.setHeaderText("Enter password to confirm:");
+            pwdDialog.setHeaderText("Enter password to confirm deletion:");
             pwdDialog.setContentText("Password:");
-            pwdDialog.getDialogPane().getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+            
+            DialogPane pwdPane = pwdDialog.getDialogPane();
+            pwdPane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+            pwdPane.getStyleClass().add("root");
+            pwdPane.getButtonTypes().setAll(btnOk, btnCancel);
 
             Optional<String> pwdResult = pwdDialog.showAndWait();
             pwdResult.ifPresent(password -> {
@@ -851,20 +881,32 @@ public class MainController {
     }
 
     private void showAlert(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title); alert.setHeaderText(null); alert.setContentText(message);
-        DialogPane dialogPane = alert.getDialogPane();
-        dialogPane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, btnOk);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        
+        DialogPane pane = alert.getDialogPane();
+        pane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        pane.getStyleClass().add("root");
+        
         alert.showAndWait();
     }
     
     private String showTextInputDialog(String title, String header, String content) {
         TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle(title); dialog.setHeaderText(header); dialog.setContentText(content);
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
-        dialogPane.getStyleClass().add("root");
+        dialog.setTitle(title);
+        dialog.setHeaderText(header);
+        dialog.setContentText(content);
+        
+        DialogPane pane = dialog.getDialogPane();
+        pane.getStylesheets().add(getClass().getResource("/resources/styles.css").toExternalForm());
+        pane.getStyleClass().add("root");
+        
+        ButtonType btnOk = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        ButtonType btnCancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        pane.getButtonTypes().setAll(btnOk, btnCancel);
+        
         Optional<String> result = dialog.showAndWait();
         return result.orElse(null);
     }
