@@ -35,7 +35,6 @@ public class MainController {
     @FXML private Button logoutButton;
     @FXML private TextArea postTextArea;
     @FXML private Button postButton;
-    @FXML private Button refreshButton;
     
     @FXML private ListView<Post> timelineView;
     private ObservableList<Post> timelinePosts = FXCollections.observableArrayList();
@@ -338,11 +337,6 @@ public class MainController {
 
     private void loadTimeline() {
 
-        // 새로고침 버튼 잠깐 비활성화 (버튼이 있으면)
-        if (refreshButton != null) {
-            refreshButton.setDisable(true);
-        }
-
         // DB에서 타임라인을 읽어오는 작업을 백그라운드 스레드에서 실행
         Task<List<Post>> task = new Task<List<Post>>() {
             @Override
@@ -355,20 +349,12 @@ public class MainController {
         task.setOnSucceeded(e -> {
             List<Post> posts = task.getValue();
             timelinePosts.setAll(posts);
-
-            if (refreshButton != null) {
-                refreshButton.setDisable(false);
-            }
         });
 
         // 에러 났을 때 처리
         task.setOnFailed(e -> {
             Throwable ex = task.getException();
             showAlert("DB Error", "Error loading timeline: " + ex.getMessage());
-
-            if (refreshButton != null) {
-                refreshButton.setDisable(false);
-            }
         });
 
         // 실제로 백그라운드에서 Task 실행
@@ -376,9 +362,6 @@ public class MainController {
         t.setDaemon(true);
         t.start();
     }
-
-
-    @FXML protected void handleRefresh() { loadTimeline(); }
 
     @FXML
     protected void handlePost() {
