@@ -6,25 +6,55 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
-<VBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="350.0" prefWidth="450.0" spacing="15.0" styleClass="root" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="myPackage.controllers.LoginController">
+<VBox alignment="CENTER" spacing="20.0" styleClass="root" stylesheets="@styles.css" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="myPackage.controllers.LoginController">
    <children>
+      
+      <SVGPath content="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" 
+               fill="#1DA1F2" scaleX="3.0" scaleY="3.0">
+         <VBox.margin>
+            <Insets bottom="20.0" top="10.0" />
+         </VBox.margin>
+      </SVGPath>
+
       <Label styleClass="label-title" text="Log in to Twitter">
          <font>
-            <Font name="System Bold" size="24.0" />
+            <Font name="System Bold" size="28.0" />
          </font>
       </Label>
-      <TextField fx:id="idField" maxWidth="250.0" promptText="User ID" styleClass="text-field" />
-      <PasswordField fx:id="passwordField" maxWidth="250.0" promptText="Password" styleClass="password-field" />
-      <Button fx:id="loginButton" mnemonicParsing="false" onAction="#handleLogin" prefWidth="250.0" text="Log In" />
-      <Button fx:id="signUpButton" mnemonicParsing="false" onAction="#handleSignUp" prefWidth="250.0" styleClass="button-danger" text="Sign Up" />
+
+      <VBox alignment="CENTER" maxWidth="350.0" spacing="15.0" style="-fx-padding: 0 20 0 20;">
+          <children>
+              <TextField fx:id="idField" promptText="Phone, email, or username" styleClass="text-field" prefHeight="50.0">
+               <font> <Font size="14.0" /> </font>
+            </TextField>
+              <PasswordField fx:id="passwordField" promptText="Password" styleClass="password-field" prefHeight="50.0">
+               <font> <Font size="14.0" /> </font>
+            </PasswordField>
+          </children>
+      </VBox>
+
+      <VBox alignment="CENTER" maxWidth="350.0" spacing="15.0">
+         <children>
+            <Button fx:id="loginButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleLogin" styleClass="button" text="Log In" style="-fx-font-size: 16px; -fx-padding: 12px 0; -fx-font-weight: 900;" />
+            
+            <Label text="Don't have an account?" textFill="#8899a6" />
+            
+            <Button fx:id="signUpButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleSignUp" styleClass="button-danger" style="-fx-border-color: #536471; -fx-text-fill: #1d9bf0;" text="Sign up" />
+         </children>
+         <VBox.margin>
+            <Insets top="10.0" />
+         </VBox.margin>
+      </VBox>
+      
       <Label fx:id="statusLabel" textFill="#E0245E">
-         <font>
-            <Font size="14.0" />
-         </font></Label>
+         <font> <Font size="14.0" /> </font>
+      </Label>
+
    </children>
    <padding>
-      <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+      <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
    </padding>
 </VBox>
