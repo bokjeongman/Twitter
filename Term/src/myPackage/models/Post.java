@@ -1,7 +1,6 @@
 package myPackage.models;
 
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 
 public class Post {
     private String postId;
@@ -9,8 +8,6 @@ public class Post {
     private String content;
     private int likes;
     private Timestamp createdAt;
-
-    // Repost/Quote info
     private String originalPostId;
     private String originalWriterId;
     private String originalContent;
@@ -29,45 +26,35 @@ public class Post {
 
     public String getPostId() { return postId; }
     public String getWriterId() { return writerId; }
-    public String getContent() { return content; }
-    public int getLikes() { return likes; }
+    public int getLikeCount() { return likes; }
     public Timestamp getCreatedAt() { return createdAt; }
+    
+    public String getContent() {
+        if (originalPostId != null) {
+            // Quote
+            if (content != null && !content.trim().isEmpty()) {
+                 return content + "\n\n" + 
+                        "───────────────\n" +
+                        "Quoting @" + originalWriterId + ":\n" + 
+                         (originalContent != null ? originalContent : "...");
+            } 
+            // Repost
+            else {
+                return "🔁 Reposted @" + originalWriterId + "'s post\n" +
+                       "───────────────\n" +
+                       (originalContent != null ? originalContent : "...");
+            }
+        }
+        // normal post
+        return content;
+    }
+
     public String getOriginalPostId() { return originalPostId; }
     public String getOriginalWriterId() { return originalWriterId; }
     public String getOriginalContent() { return originalContent; }
 
     @Override
     public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String dateStr = sdf.format(createdAt);
-
-        // 1. writer + num_of_likes + timeStamp
-        String header = "Writer: " + writerId + " (Likes: " + likes + ")  [" + dateStr + "]";
-        
-        StringBuilder sb = new StringBuilder();
-        sb.append(header).append("\n");
-
-        // 2. content
-        if (originalPostId != null) {
-            // repost or quote
-            if (content == null || content.isEmpty()) {
-                // repost
-                sb.append(" [ " + writerId + " Reposted ]");
-            } else {
-                // quote
-                sb.append(content);
-            }
-            
-            // show original content
-            sb.append("\n\n")
-              .append("    --------------------------------\n")
-              .append("    | Original Post by @" + originalWriterId + " |\n")
-              .append("    | " + (originalContent != null ? originalContent : "(Content unavailable)") + " |\n")
-              .append("    --------------------------------");
-        } else {
-            sb.append(content != null ? content : "");
-        }
-        
-        return sb.toString();
+        return "Post by " + writerId + ": " + content;
     }
 }
