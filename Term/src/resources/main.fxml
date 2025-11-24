@@ -7,216 +7,195 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
 <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" styleClass="root" stylesheets="@styles.css" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="myPackage.controllers.MainController">
   <tabs>
-    <Tab text="Home">
+    <Tab text="🏠 Home">
       <content>
         <BorderPane prefHeight="600.0" prefWidth="500.0">
           <top>
-            <VBox BorderPane.alignment="CENTER">
+            <VBox spacing="15.0" BorderPane.alignment="CENTER">
               <children>
-                <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="200.0" spacing="10.0">
+                <HBox alignment="CENTER_LEFT" prefHeight="60.0" spacing="15.0" style="-fx-border-color: #38444D; -fx-border-width: 0 0 1 0; -fx-padding: 0 0 10 0;">
                   <children>
-                    <Label fx:id="welcomeLabel" styleClass="label-title" text="[UserID]">
-                       <HBox.margin>
-                         <Insets right="50.0" />
-                       </HBox.margin>
+                    <Label fx:id="welcomeLabel" maxWidth="1.7976931348623157E308" styleClass="label-title" text="👋 Hello" HBox.hgrow="ALWAYS">
+                       <font><Font size="22.0" /></font>
                     </Label>
-                    <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" text="Refresh" />
-                    <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" styleClass="button-danger" text="Log Out" />
+                    <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" style="-fx-background-color: transparent; -fx-text-fill: #1DA1F2; -fx-font-weight: bold; -fx-cursor: hand;" text="🔄 Refresh" />
+                    <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" styleClass="button-danger" text="🚪 Log Out" />
                   </children>
-                  <padding>
-                    <Insets left="10.0" right="10.0" />
-                  </padding>
+                  <padding><Insets left="20.0" right="20.0" top="15.0" /></padding>
                 </HBox>
-                <VBox spacing="5.0">
+                <VBox spacing="10.0">
                   <children>
-                    <TextArea fx:id="postTextArea" prefHeight="70.0" promptText="What's happening? (#hashtag @mention)" styleClass="text-area" />
-                    <Button fx:id="postButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handlePost" text="Post" />
+                    <TextArea fx:id="postTextArea" prefHeight="80.0" promptText="What's happening? (#hashtag @mention)" wrapText="true" />
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button fx:id="postButton" mnemonicParsing="false" onAction="#handlePost" prefWidth="100.0" text="Tweet" />
+                    </HBox>
                   </children>
-                  <padding>
-                    <Insets bottom="10.0" left="10.0" right="10.0" top="5.0" />
-                  </padding>
+                  <padding><Insets bottom="10.0" left="20.0" right="20.0" /></padding>
                 </VBox>
               </children>
             </VBox>
           </top>
           <center>
-            <ListView fx:id="timelineView" prefHeight="200.0" prefWidth="200.0" styleClass="list-view" BorderPane.alignment="CENTER" />
+            <ListView fx:id="timelineView" styleClass="list-view" BorderPane.alignment="CENTER" />
           </center>
         </BorderPane>
       </content>
     </Tab>
-    <Tab text="Details">
+
+    <Tab text="📄 Details">
       <content>
-        <BorderPane>
-          <top>
-            <VBox prefWidth="100.0" spacing="10.0" BorderPane.alignment="CENTER">
-              <children>
-                <Label styleClass="label-title" text="[Post Details]">
-                  <font>
-                    <Font name="System Bold" size="14.0" />
-                  </font>
-                </Label>
-                <Label fx:id="selectedPostLabel" minHeight="100.0" styleClass="post-detail-label" text="Select a post from the Home or Explore tab." wrapText="true" />
-                <HBox fx:id="postActionsBox" alignment="CENTER_LEFT" disable="true" spacing="10.0">
-                  <children>
-                    <Button fx:id="likeButton" mnemonicParsing="false" onAction="#handleLikePost" text="Like" />
-                    <Button fx:id="unlikeButton" mnemonicParsing="false" onAction="#handleUnlikePost" styleClass="button-danger" text="Unlike" />
-                    <Button fx:id="repostButton" mnemonicParsing="false" onAction="#handleRepost" text="Repost" />
-                    <Button fx:id="quoteButton" mnemonicParsing="false" onAction="#handleQuote" text="Quote" />
-                    <Button fx:id="deletePostButton" mnemonicParsing="false" onAction="#handleDeletePost" style="-fx-text-fill: gray;" text="Delete Post" visible="false" />
-                  </children>
-                </HBox>
-                <TextArea fx:id="commentTextArea" disable="true" prefHeight="60.0" promptText="Write a comment..." styleClass="text-area" />
-                <Button fx:id="commentButton" disable="true" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleWriteComment" text="Post Comment" />
-              </children>
-              <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-              </padding>
-            </VBox>
-          </top>
-          <center>
-            <VBox BorderPane.alignment="CENTER">
-               <children>
-                  <Label text="[Comments]">
-                     <padding>
-                        <Insets left="10.0" top="5.0" />
-                     </padding>
-                  </Label>
-                  <ListView fx:id="commentListView" prefHeight="200.0" prefWidth="200.0" styleClass="list-view" VBox.vgrow="ALWAYS" />
-               </children>
-            </VBox>
-          </center>
-          <bottom>
-            <HBox fx:id="commentActionsBox" alignment="CENTER_RIGHT" disable="true" spacing="10.0" BorderPane.alignment="CENTER">
-              <children>
-                <Button fx:id="likeCommentButton" mnemonicParsing="false" onAction="#handleLikeComment" text="Like Comment" />
-                <Button fx:id="unlikeCommentButton" mnemonicParsing="false" onAction="#handleUnlikeComment" styleClass="button-danger" text="Unlike" />
-                <Button fx:id="replyButton" mnemonicParsing="false" onAction="#handleReplyToComment" text="Reply" />
-                <Button fx:id="deleteCommentButton" mnemonicParsing="false" onAction="#handleDeleteComment" style="-fx-text-fill: red;" text="Delete" visible="false" />
-              </children>
-              <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-              </padding>
-            </HBox>
-          </bottom>
-        </BorderPane>
+        <SplitPane dividerPositions="0.5" orientation="VERTICAL" style="-fx-background-color: transparent;">
+           <items>
+              
+              <VBox>
+                 <ScrollPane fitToWidth="true" styleClass="scroll-pane-background" VBox.vgrow="ALWAYS">
+                     <content>
+                        <VBox alignment="TOP_CENTER">
+                           <padding><Insets top="20" bottom="10" left="20" right="20"/></padding>
+                           <children>
+                              <Label fx:id="selectedPostLabel" maxWidth="1.7976931348623157E308" styleClass="post-detail-label" text="👈 Select a post to view details." wrapText="true" alignment="TOP_LEFT" minHeight="100"/>
+                           </children>
+                        </VBox>
+                     </content>
+                 </ScrollPane>
+                 
+                 <HBox fx:id="postActionsBox" alignment="CENTER_LEFT" disable="true" spacing="20.0" style="-fx-background-color: #15202B; -fx-border-color: #38444D; -fx-border-width: 1 0 0 0;">
+                      <padding><Insets top="15" bottom="15" left="25" right="25"/></padding>
+                      <children>
+                        <Button fx:id="likeButton" mnemonicParsing="false" onAction="#handleLikePost" style="-fx-background-color: transparent; -fx-text-fill: #E0245E; -fx-font-size: 24px;" text="❤️"><tooltip><Tooltip text="Like" /></tooltip></Button>
+                        <Button fx:id="unlikeButton" mnemonicParsing="false" onAction="#handleUnlikePost" style="-fx-background-color: transparent; -fx-text-fill: #8899A6; -fx-font-size: 24px;" text="💔"><tooltip><Tooltip text="Unlike" /></tooltip></Button>
+                        <Button fx:id="repostButton" mnemonicParsing="false" onAction="#handleRepost" style="-fx-background-color: transparent; -fx-text-fill: #17BF63; -fx-font-size: 24px;" text="🔁"><tooltip><Tooltip text="Repost" /></tooltip></Button>
+                        <Button fx:id="quoteButton" mnemonicParsing="false" onAction="#handleQuote" style="-fx-background-color: transparent; -fx-text-fill: #1DA1F2; -fx-font-size: 24px;" text="💬"><tooltip><Tooltip text="Quote Tweet" /></tooltip></Button>
+                        <Button fx:id="deletePostButton" mnemonicParsing="false" onAction="#handleDeletePost" style="-fx-background-color: transparent; -fx-text-fill: #E0245E; -fx-font-size: 24px;" text="🗑️" visible="false"><tooltip><Tooltip text="Delete Post" /></tooltip></Button>
+                      </children>
+                 </HBox>
+              </VBox>
+
+              <VBox spacing="10.0" style="-fx-background-color: #15202B;">
+                 <padding><Insets top="10" bottom="10" left="15" right="15"/></padding>
+                 <children>
+                    <HBox spacing="10.0" alignment="CENTER_LEFT">
+                        <TextArea fx:id="commentTextArea" disable="true" prefHeight="50.0" prefRowCount="2" promptText="Post your reply..." HBox.hgrow="ALWAYS" />
+                        <Button fx:id="commentButton" disable="true" minWidth="70.0" mnemonicParsing="false" onAction="#handleWriteComment" text="Reply" />
+                    </HBox>
+                    <Separator opacity="0.1"/>
+                    <Label text="Comments" style="-fx-font-weight: bold; -fx-text-fill: #8899A6;" />
+                    <ListView fx:id="commentListView" VBox.vgrow="ALWAYS" styleClass="list-view" />
+                    <HBox fx:id="commentActionsBox" alignment="CENTER_RIGHT" disable="true" spacing="15.0">
+                      <children>
+                        <Button fx:id="likeCommentButton" mnemonicParsing="false" onAction="#handleLikeComment" style="-fx-background-color: transparent; -fx-text-fill: #E0245E;" text="❤️" />
+                        <Button fx:id="unlikeCommentButton" mnemonicParsing="false" onAction="#handleUnlikeComment" style="-fx-background-color: transparent; -fx-text-fill: #8899A6;" text="💔" />
+                        <Button fx:id="replyButton" mnemonicParsing="false" onAction="#handleReplyToComment" text="Reply" />
+                        <Button fx:id="deleteCommentButton" mnemonicParsing="false" onAction="#handleDeleteComment" styleClass="button-danger" text="Delete" visible="false" />
+                      </children>
+                    </HBox>
+                 </children>
+              </VBox>
+           </items>
+        </SplitPane>
       </content>
     </Tab>
-    <Tab text="Explore">
+
+    <Tab text="🔍 Explore">
       <content>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane-background">
           <content>
-            <VBox spacing="10.0">
+            <VBox spacing="20.0">
               <children>
-                <Label styleClass="label-title" text="[Search]">
-                  <font>
-                    <Font name="System Bold" size="14.0" />
-                  </font>
-                </Label>
-                <HBox spacing="5.0">
+                <Label styleClass="label-title" text="Search Twitter" />
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
                   <children>
-                    <TextField fx:id="searchField" promptText="Hashtag (without #) or User ID" styleClass="text-field" HBox.hgrow="ALWAYS" />
-                    <Button fx:id="searchTagButton" mnemonicParsing="false" onAction="#handleSearchTag" text="Search Tag" />
-                    <Button fx:id="searchUserButton" mnemonicParsing="false" onAction="#handleSearchUser" text="Search User" />
+                    <TextField fx:id="searchField" promptText="Search keywords or @users" style="-fx-font-size: 14px;" HBox.hgrow="ALWAYS" />
+                    <Button fx:id="searchTagButton" mnemonicParsing="false" onAction="#handleSearchTag" text="🔍 Tag" />
+                    <Button fx:id="searchUserButton" mnemonicParsing="false" onAction="#handleSearchUser" text="👤 User" />
                   </children>
                 </HBox>
-                <ListView fx:id="searchResultView" prefHeight="400.0" prefWidth="200.0" styleClass="list-view" VBox.vgrow="ALWAYS" />
+                <ListView fx:id="searchResultView" prefHeight="450.0" />
               </children>
-              <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-              </padding>
+              <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
             </VBox>
           </content>
         </ScrollPane>
       </content>
     </Tab>
-    <Tab text="Social">
+
+    <Tab text="👥 Social">
       <content>
         <ScrollPane fitToWidth="true" styleClass="scroll-pane-background">
           <content>
-            <VBox spacing="10.0">
+            <VBox spacing="25.0">
               <children>
-                <Label styleClass="label-title" text="[My Social List]">
-                  <font>
-                    <Font name="System Bold" size="14.0" />
-                  </font>
-                </Label>
-                <HBox spacing="10.0">
-                  <children>
-                    <Button fx:id="myFollowingButton" mnemonicParsing="false" onAction="#handleShowMyFollowing" text="Show Following" />
-                    <Button fx:id="myFollowerButton" mnemonicParsing="false" onAction="#handleShowMyFollowers" text="Show Followers" />
-                  </children>
-                </HBox>
-                <ListView fx:id="socialListView" prefHeight="150.0" prefWidth="200.0" styleClass="list-view" VBox.vgrow="ALWAYS" />
-                <Label fx:id="otherUserLabel" styleClass="label-title" text="[Search &amp; Follow Other Users]">
-                  <VBox.margin>
-                    <Insets top="10.0" />
-                  </VBox.margin>
-                </Label>
-                <HBox spacing="5.0">
-                  <children>
-                    <TextField fx:id="socialSearchField" promptText="Search User ID" styleClass="text-field" HBox.hgrow="ALWAYS" />
-                    <Button fx:id="socialSearchButton" mnemonicParsing="false" onAction="#handleSocialSearchUser" text="Search" />
-                  </children>
-                </HBox>
-                <FlowPane fx:id="socialActionsBox" disable="true" hgap="10.0" prefWrapLength="400.0" vgap="5.0">
-                  <children>
-                    <Button fx:id="viewFollowingButton" mnemonicParsing="false" onAction="#handleShowOtherFollowing" text="View Following" />
-                    <Button fx:id="viewFollowerButton" mnemonicParsing="false" onAction="#handleShowOtherFollower" text="View Followers" />
-                    <Button fx:id="followButton" mnemonicParsing="false" onAction="#handleFollow" text="Follow" />
-                    <Button fx:id="unfollowButton" mnemonicParsing="false" onAction="#handleUnfollow" styleClass="button-danger" text="Unfollow" />
-                  </children>
-                </FlowPane>
+                <VBox spacing="10.0">
+                    <Label styleClass="label-title" text="My Network" />
+                    <HBox spacing="15.0">
+                      <children>
+                        <Button fx:id="myFollowingButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowMyFollowing" text="Following List" HBox.hgrow="ALWAYS"/>
+                        <Button fx:id="myFollowerButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleShowMyFollowers" text="Followers List" HBox.hgrow="ALWAYS"/>
+                      </children>
+                    </HBox>
+                    <ListView fx:id="socialListView" prefHeight="250.0" />
+                </VBox>
+                <Separator opacity="0.1"/>
+                <VBox spacing="15.0">
+                    <Label fx:id="otherUserLabel" styleClass="label-title" text="Find &amp; Connect" />
+                    <HBox spacing="10.0">
+                      <children>
+                        <TextField fx:id="socialSearchField" promptText="Enter User ID to connect" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="socialSearchButton" mnemonicParsing="false" onAction="#handleSocialSearchUser" text="Search" />
+                      </children>
+                    </HBox>
+                    <FlowPane fx:id="socialActionsBox" disable="true" hgap="15.0" vgap="15.0">
+                      <children>
+                        <Button fx:id="followButton" mnemonicParsing="false" onAction="#handleFollow" text="➕ Follow" />
+                        <Button fx:id="unfollowButton" mnemonicParsing="false" onAction="#handleUnfollow" styleClass="button-danger" text="➖ Unfollow" />
+                        <Button fx:id="viewFollowingButton" mnemonicParsing="false" onAction="#handleShowOtherFollowing" style="-fx-background-color: #7986CB;" text="View Their Following" />
+                        <Button fx:id="viewFollowerButton" mnemonicParsing="false" onAction="#handleShowOtherFollower" style="-fx-background-color: #7986CB;" text="View Their Followers" />
+                      </children>
+                    </FlowPane>
+                </VBox>
               </children>
-              <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-              </padding>
+              <padding><Insets bottom="20.0" left="20.0" right="20.0" top="20.0" /></padding>
             </VBox>
           </content>
         </ScrollPane>
       </content>
     </Tab>
-    <Tab text="Account">
+
+    <Tab text="⚙️ Account">
          <content>
            <ScrollPane fitToWidth="true" styleClass="scroll-pane-background">
              <content>
-                <VBox alignment="TOP_CENTER" spacing="20.0">
+                <VBox alignment="TOP_CENTER" spacing="30.0">
                    <children>
-                      <Label styleClass="label-title" text="[Change Password]">
-                         <font>
-                            <Font name="System Bold" size="14.0" />
-                         </font>
-                      </Label>
-                      <PasswordField fx:id="newPasswordField" maxWidth="300.0" promptText="New Password" styleClass="password-field" />
-                      <Button fx:id="changePasswordButton" mnemonicParsing="false" onAction="#handleChangePassword" text="Change" />
-                      <Label fx:id="passwordStatusLabel" textFill="#E0245E" />
-                      
-                      <Separator maxWidth="300.0" />
-                      
-                      <Label styleClass="label-title" text="[Delete Account]" textFill="RED">
-                         <font>
-                            <Font name="System Bold" size="14.0" />
-                         </font>
-                      </Label>
-                      <Label text="Warning: This cannot be undone." textFill="GRAY" />
-                      <Button mnemonicParsing="false" onAction="#handleDeleteAccount" style="-fx-background-color: #e0245e; -fx-text-fill: white; -fx-font-weight: bold;" text="Delete Account" />
+                      <Label styleClass="label-title" text="Security Settings" />
+                      <VBox alignment="CENTER" maxWidth="450.0" spacing="15.0" style="-fx-background-color: #192734; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 10, 0, 0, 5);">
+                          <Label text="Change Password" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;" />
+                          <PasswordField fx:id="newPasswordField" promptText="Enter New Password" />
+                          <Button fx:id="changePasswordButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#handleChangePassword" text="Update Password" />
+                          <Label fx:id="passwordStatusLabel" textFill="#E0245E" />
+                      </VBox>
+                      <Separator maxWidth="450.0" opacity="0.1" />
+                      <VBox styleClass="danger-zone" maxWidth="450.0" spacing="15.0" alignment="CENTER">
+                          <Label text="Danger Zone" textFill="#E0245E" style="-fx-font-size: 20px; -fx-font-weight: bold;"/>
+                          <Label text="Deleting your account is permanent and cannot be undone." textFill="#8899A6" wrapText="true"/>
+                          <Button mnemonicParsing="false" onAction="#handleDeleteAccount" styleClass="button-danger" style="-fx-background-color: #E0245E; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 30;" text="DELETE ACCOUNT" />
+                      </VBox>
                    </children>
-                   <padding>
-                      <Insets bottom="40.0" top="40.0" />
-                   </padding>
+                   <padding><Insets bottom="50.0" top="40.0" /></padding>
                 </VBox>
              </content>
            </ScrollPane>
