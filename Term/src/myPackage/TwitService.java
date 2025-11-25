@@ -71,25 +71,41 @@ public class TwitService {
     }
 
     // --- 2. Post ---
+    
     public List<Post> getTimeline(String loggedInUserId) throws SQLException {
         List<Post> timelinePosts = new ArrayList<>();
         String sql = "SELECT p.post_id, p.writer_id, p.content, p.num_of_likes, p.created_at, " +
-                     "p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content " +
+                     "       p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content, " +
+                     "       (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS cmt_count, " +
+                     "       (SELECT COUNT(*) FROM posts r WHERE r.original_post_id = p.post_id) AS rep_count " +
                      "FROM posts AS p " +
                      "LEFT JOIN posts AS op ON p.original_post_id = op.post_id " + 
-                     "WHERE p.writer_id = ? OR p.content LIKE ? " +
-                     "OR p.writer_id IN (SELECT f.following_id FROM follow_relationship AS f WHERE f.user_id = ?) " +
+                     "WHERE p.writer_id = ? " +  
+                     "   OR p.content LIKE ? " + 
+                     "   OR p.writer_id IN (SELECT f.following_id FROM follow_relationship AS f WHERE f.user_id = ?) " + 
                      "ORDER BY p.created_at DESC LIMIT 20";
         
         try (Connection con = DBConnector.getConnection();
              PreparedStatement pstmt = con.prepareStatement(sql)) {
+            
             pstmt.setString(1, loggedInUserId);
             pstmt.setString(2, "%@" + loggedInUserId + "%");
             pstmt.setString(3, loggedInUserId);
             
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    timelinePosts.add(mapResultSetToPost(rs));
+                    timelinePosts.add(new Post(
+                        rs.getString("post_id"),
+                        rs.getString("writer_id"),
+                        rs.getString("content"),
+                        rs.getInt("num_of_likes"),
+                        rs.getInt("cmt_count"),  
+                        rs.getInt("rep_count"),  
+                        rs.getTimestamp("created_at"),
+                        rs.getString("original_post_id"),
+                        rs.getString("original_writer_id"),
+                        rs.getString("original_content")
+                    ));
                 }
             }
         }
@@ -99,36 +115,37 @@ public class TwitService {
     public List<Post> getUserBoard(String userIdToView) throws SQLException {
         List<Post> posts = new ArrayList<>();
         String sql = "SELECT p.post_id, p.writer_id, p.content, p.num_of_likes, p.created_at, " +
-                     "p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content " +
+                     "       p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content, " +
+                     "       (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS cmt_count, " +
+                     "       (SELECT COUNT(*) FROM posts r WHERE r.original_post_id = p.post_id) AS rep_count " +
                      "FROM posts AS p " +
                      "LEFT JOIN posts AS op ON p.original_post_id = op.post_id " +
-                     "WHERE p.writer_id = ? OR p.content LIKE ? " +
+                     "WHERE p.writer_id = ? OR p.content LIKE ? " + 
                      "ORDER BY p.created_at DESC LIMIT 20";
         
         try (Connection con = DBConnector.getConnection();
              PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, userIdToView);
             pstmt.setString(2, "%@" + userIdToView + "%");
+            
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    posts.add(mapResultSetToPost(rs));
+                    posts.add(new Post(
+                        rs.getString("post_id"),
+                        rs.getString("writer_id"),
+                        rs.getString("content"),
+                        rs.getInt("num_of_likes"),
+                        rs.getInt("cmt_count"),
+                        rs.getInt("rep_count"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("original_post_id"),
+                        rs.getString("original_writer_id"),
+                        rs.getString("original_content")
+                    ));
                 }
             }
         }
         return posts;
-    }
-
-    private Post mapResultSetToPost(ResultSet rs) throws SQLException {
-        return new Post(
-            rs.getString("post_id"),
-            rs.getString("writer_id"),
-            rs.getString("content"),
-            rs.getInt("num_of_likes"),
-            rs.getTimestamp("created_at"),
-            rs.getString("original_post_id"),
-            rs.getString("original_writer_id"),
-            rs.getString("original_content")
-        );
     }
 
     public boolean writePost(String loggedInUserId, String content) throws SQLException {
@@ -204,7 +221,7 @@ public class TwitService {
     // --- 3. Social ---
     public boolean checkFollowStatus(String loggedInUserId, String userToView) throws SQLException {
         String sql = "select 1 from follow_relationship where user_id = ? and following_id = ?";
-        try (Connection con = DBConnector.getConnection();
+         try (Connection con = DBConnector.getConnection();
              PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, loggedInUserId);
             pstmt.setString(2, userToView);
@@ -338,11 +355,9 @@ public class TwitService {
              PreparedStatement parentPstmt = con.prepareStatement(parentSql);
              PreparedStatement childPstmt = con.prepareStatement(childSql)) {
 
-            // find parent comment
             parentPstmt.setString(1, postId);
             try (ResultSet parentRs = parentPstmt.executeQuery()) {
                 while (parentRs.next()) {
-                    // add parent_comment
                     Comment parent = new Comment(
                         parentRs.getString("comment_id"),
                         parentRs.getString("parent_comment_id"),
@@ -353,7 +368,6 @@ public class TwitService {
                     );
                     orderedComments.add(parent);
 
-                    // find reply by parent_cid
                     childPstmt.setString(1, parent.getCommentId());
                     try (ResultSet childRs = childPstmt.executeQuery()) {
                         while (childRs.next()) {
@@ -482,10 +496,13 @@ public class TwitService {
     }
 
     // --- 5. Explore ---
+    
     public List<Post> searchByHashtag(String tagText) throws SQLException {
         List<Post> posts = new ArrayList<>();
         String sql = "select p.post_id, p.writer_id, p.content, p.num_of_likes, p.created_at, " +
-                     "p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content " +
+                     "       p.original_post_id, op.writer_id AS original_writer_id, op.content AS original_content, " +
+                     "       (SELECT COUNT(*) FROM comment c WHERE c.post_id = p.post_id) AS cmt_count, " +
+                     "       (SELECT COUNT(*) FROM posts r WHERE r.original_post_id = p.post_id) AS rep_count " +
                      "from posts as p " +
                      "LEFT JOIN posts AS op ON p.original_post_id = op.post_id " +
                      "join post_hashtag as ph on p.post_id = ph.post_id " +
@@ -497,7 +514,20 @@ public class TwitService {
              PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, tagText);
             try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) posts.add(mapResultSetToPost(rs));
+                while (rs.next()) {
+                    posts.add(new Post(
+                        rs.getString("post_id"),
+                        rs.getString("writer_id"),
+                        rs.getString("content"),
+                        rs.getInt("num_of_likes"),
+                        rs.getInt("cmt_count"),
+                        rs.getInt("rep_count"),
+                        rs.getTimestamp("created_at"),
+                        rs.getString("original_post_id"),
+                        rs.getString("original_writer_id"),
+                        rs.getString("original_content")
+                    ));
+                }
             }
         }
         return posts;
