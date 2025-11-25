@@ -93,40 +93,35 @@ public class MainController {
         searchResultView.setCellFactory(createPostCellFactory());
         socialListView.setCellFactory(createUserCellFactory());
         commentListView.setCellFactory(param -> new ListCell<Comment>() {
-
             private final HBox rootBox = new HBox(10);
             
             private final StackPane profilePane = new StackPane();
-            private final Circle profileCircle = new Circle(15); 
+            private final Circle profileCircle = new Circle(18); 
             private final Label profileInitial = new Label();
 
             private final VBox contentBox = new VBox(3);
-            private final HBox headerBox = new HBox(5);
-            private final Label nameLabel = new Label(); 
-            private final Label timeLabel = new Label(); 
-            private final Label contentLabel = new Label(); 
-            private final Label likeLabel = new Label(); 
+            private final Label infoLabel = new Label();
+            private final Label contentLabel = new Label();
+            private final Label likeLabel = new Label();
 
             {
                 rootBox.setMaxWidth(Double.MAX_VALUE);
                 rootBox.setAlignment(Pos.TOP_LEFT);
-                rootBox.setPadding(new Insets(8));
+                rootBox.setPadding(new Insets(10));
 
-                profileInitial.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: white;");
+                profileInitial.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: white;");
                 profilePane.getChildren().addAll(profileCircle, profileInitial);
-                profilePane.setMinWidth(30); profilePane.setMinHeight(30);
+                profilePane.setMinWidth(36); profilePane.setMinHeight(36);
+                profilePane.setAlignment(Pos.CENTER);
 
-                nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 13px;");
-                timeLabel.setStyle("-fx-text-fill: #71767B; -fx-font-size: 12px;");
-                headerBox.getChildren().addAll(nameLabel, timeLabel);
-                headerBox.setAlignment(Pos.CENTER_LEFT);
-
-                contentLabel.setStyle("-fx-text-fill: #E7E9EA; -fx-font-size: 14px;");
-                contentLabel.setWrapText(true);
-                likeLabel.setStyle("-fx-text-fill: #E0245E; -fx-font-size: 11px; -fx-padding: 2 0 0 0;");
-
-                contentBox.getChildren().addAll(headerBox, contentLabel, likeLabel);
+                infoLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #8899A6; -fx-font-size: 13px;");
                 
+                contentLabel.setStyle("-fx-text-fill: white; -fx-font-size: 15px;");
+                contentLabel.setWrapText(true);
+                
+                likeLabel.setStyle("-fx-text-fill: #E0245E; -fx-font-size: 12px; -fx-padding: 5 0 0 0;");
+                
+                contentBox.getChildren().addAll(infoLabel, contentLabel, likeLabel);
                 rootBox.getChildren().addAll(profilePane, contentBox);
                 HBox.setHgrow(contentBox, Priority.ALWAYS);
             }
@@ -141,26 +136,33 @@ public class MainController {
                     setStyle("-fx-background-color: transparent;"); 
                 } else {
                     String writer = item.getWriterId();
+                    String timeStr = getRelativeTime(item.getCreatedAt());
                     
                     profileCircle.setFill(Color.web(getColorForUser(writer)));
                     if (writer.length() > 0) profileInitial.setText(writer.substring(0, 1).toUpperCase());
-
-                    nameLabel.setText(writer);
-                    timeLabel.setText("• " + getRelativeTime(item.getCreatedAt()));
+                    
+                    if (item.getParentCommentId() != null) {
+                        rootBox.setPadding(new Insets(10, 10, 10, 60)); 
+                        
+                        infoLabel.setText(writer + "  •  " + timeStr);
+                        
+                        rootBox.setStyle("-fx-border-color: #38444D; -fx-border-width: 0 0 0 3; -fx-border-insets: 0 0 0 45;");
+                    } else {
+                        rootBox.setPadding(new Insets(10));
+                        infoLabel.setText(writer + "  •  " + timeStr);
+                        rootBox.setStyle("-fx-background-color: transparent;");
+                    }
+                    
                     contentLabel.setText(item.getContent());
                     likeLabel.setText("❤️ " + item.getLikes());
 
-                    if (item.getParentCommentId() != null) {
-                        rootBox.setPadding(new Insets(8, 8, 8, 50));
-                        rootBox.setStyle("-fx-border-color: #38444D; -fx-border-width: 0 0 0 3; -fx-border-insets: 0 0 0 35;");
-                    } else {
-                        rootBox.setPadding(new Insets(8));
-                        rootBox.setStyle("-fx-background-color: transparent;");
-                    }
-
                     if (isSelected()) {
-                        rootBox.setStyle("-fx-background-color: #1C2732; -fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 0;");
-                    }
+                        String baseStyle = (item.getParentCommentId() != null) 
+                                ? "-fx-border-color: #1DA1F2; -fx-border-width: 0 0 0 3; -fx-border-insets: 0 0 0 45;" 
+                                : "-fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 0;";
+                        
+                        rootBox.setStyle(baseStyle + "-fx-background-color: #1C2732;");
+                    } 
 
                     setGraphic(rootBox);
                     setText(null);
@@ -275,8 +277,12 @@ public class MainController {
                     bodyLabel.setText(item.getContent());
 
                     likeStat.setText("❤️ " + item.getLikeCount());
-                    retweetStat.setText("🔁 0"); 
-                    replyStat.setText("💬 0"); 
+                    
+                    int rCount = item.getRepostCount();
+                    retweetStat.setText("🔁 " + (rCount > 0 ? rCount : "")); 
+                    
+                    int cCount = item.getCommentCount();
+                    replyStat.setText("💬 " + (cCount > 0 ? cCount : ""));
 
                     if (isSelected()) {
                         cardBox.setStyle("-fx-background-color: #1C2732; -fx-border-color: #1DA1F2; -fx-border-width: 0 0 1 4;"); 
@@ -451,9 +457,13 @@ public class MainController {
         Label likesLabel = new Label(post.getLikeCount() + " Likes");
         likesLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;");
         
-        Label repostsLabel = new Label("0 Reposts");
+        Label repostsLabel = new Label(post.getRepostCount() + " Reposts");
         repostsLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;");
-        statsBox.getChildren().addAll(likesLabel, repostsLabel);
+        
+        Label commentsLabel = new Label(post.getCommentCount() + " Comments");
+        commentsLabel.setStyle("-fx-text-fill: #8899A6; -fx-font-size: 15px;");
+
+        statsBox.getChildren().addAll(likesLabel, repostsLabel, commentsLabel);
 
         cardContainer.getChildren().addAll(headerBox, contentLabel, dateLabel, separator, statsBox);
 
@@ -614,7 +624,8 @@ public class MainController {
         }
     }
 
-    @FXML protected void handleWriteComment() {
+    @FXML 
+    protected void handleWriteComment() {
         if (selectedPost == null) return;
         String content = commentTextArea.getText();
         if (content.isEmpty()) {
@@ -622,11 +633,24 @@ public class MainController {
             return;
         }
         try {
-            twitService.writeComment(currentUserId, selectedPost.getPostId(), content);
-            commentTextArea.clear();
-            loadComments(selectedPost.getPostId());
+            boolean success = twitService.writeComment(currentUserId, selectedPost.getPostId(), content);
+            
+            if (success) {
+                commentTextArea.clear();
+                
+                loadComments(selectedPost.getPostId());
+                
+                selectedPost.setCommentCount(selectedPost.getCommentCount() + 1); 
+                timelineView.refresh();   
+                searchResultView.refresh(); 
+                
+                showPostDetails(selectedPost); 
+                
+            } else {
+                showAlert("Error", "Failed to post comment.");
+            }
         } catch (SQLException e) {
-             showAlert("DB Error", "Error writing comment: " + e.getMessage());
+            showAlert("DB Error", "Error writing comment: " + e.getMessage());
         }
     }
 
@@ -681,18 +705,32 @@ public class MainController {
         }
     }
 
-    @FXML protected void handleReplyToComment() {
+    @FXML 
+    protected void handleReplyToComment() {
         if (selectedComment == null || selectedPost == null) return;
+        
         if (selectedComment.getParentCommentId() != null) {
             showAlert("Notice", "You cannot reply to a reply.");
             return;
         }
+        
         String replyContent = showTextInputDialog("Reply to Comment", "Replying to @" + selectedComment.getWriterId(), "Enter your reply:");
+        
         if (replyContent != null && !replyContent.isEmpty()) {
             try {
-                twitService.writeReply(currentUserId, selectedPost.getPostId(), selectedComment.getCommentId(), replyContent);
-                loadComments(selectedPost.getPostId());
-                clearCommentDetails();
+                boolean success = twitService.writeReply(currentUserId, selectedPost.getPostId(), selectedComment.getCommentId(), replyContent);
+                
+                if (success) {
+                    loadComments(selectedPost.getPostId());
+                    clearCommentDetails();
+
+                    selectedPost.setCommentCount(selectedPost.getCommentCount() + 1); 
+                    
+                    timelineView.refresh();
+                    searchResultView.refresh();
+                    showPostDetails(selectedPost); 
+                    
+                }
             } catch (SQLException e) {
                  showAlert("DB Error", "Error writing reply: " + e.getMessage());
             }
